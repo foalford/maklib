@@ -1,3 +1,5 @@
+# vim: set filetype=make:
+#
 include maklib/libs/gmsl
 include maklib/libs/version
 
@@ -15,6 +17,8 @@ __check_defined = \
 	$(error Undefined $1$(if $2, ($2))))
 
 define __install
+$1: $1_version := $2
+
 $1:
 	$$(install_$1)
 
@@ -32,6 +36,6 @@ $(call check_defined,install_$1$(if $2, get_$1_version),
 		install_$1 and get_$1_version need to be defined)
 $(and $(call is_installed,$1),$2,\
 	$(call ver.lt,$(get_$1_version),$2),\
-	$(call __install,$1))
+	$(call __install,$1,$2))
 endef
 

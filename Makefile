@@ -9,13 +9,17 @@ all: install
 
 install:
 	sudo mkdir -p $(installdir)
-	curl -0 $(download_url) | sudo tar -xz -C $(installdir)
+	if [ -f $(release_name) ] ; then \
+		sudo tar xzf $(release_name) -C $(installdir) ; \
+	else \
+		curl -0 $(download_url) | sudo tar -xz -C $(installdir); \
+	fi;
 
 uninstall:
 	sudo rm -r $(installdir)
 
 build:
-	tar czf makelib.tgz $(shell ls -d */)
+	tar czf $(release_name) $(shell ls -d */)
 
 release: build
 	aws s3 cp makelib.tgz s3://static.bitcoingroup.com.au/$(release_name)
