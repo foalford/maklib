@@ -22,7 +22,7 @@ build:
 	tar czf $(release_name) $(shell ls -d */)
 
 release: build
-	aws s3 cp makelib.tgz s3://static.bitcoingroup.com.au/$(release_name)
+	aws s3 cp $(release_name) s3://static.bitcoingroup.com.au/$(release_name)
 
 .PHONY: release build all install
 

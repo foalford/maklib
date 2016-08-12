@@ -34,8 +34,9 @@ is_installed = $(shell which $1 > /dev/null && echo $1)
 define require
 $(call check_defined,install_$1$(if $2, get_$1_version),
 		install_$1 and get_$1_version need to be defined)
-$(and $(call is_installed,$1),$2,\
-	$(call ver.lt,$(get_$1_version),$2),\
-	$(call __install,$1,$2))
+$(if $(call is_installed,$1),$(and $2,
+	$(call ver.lt,$(get_$1_version),$2),
+	$(call __install,$1,$2)),
+    $(call __install,$1,$2))
 endef
 

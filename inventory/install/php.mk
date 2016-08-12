@@ -11,9 +11,12 @@ $(shell php -v | sed -ne "s/^PHP \([1-9].[0-9]\+.[0-9]\+\).*/\1/p")
 endef
 
 define install_php
-	sudo add-apt-repository --yes ppa:ondrej/php
-	sudo apt-get update
-	sudo apt-get install php$(php_version)
+if [ ! -f /etc/apt/sources.list.d/ondrej-php-trusty.list ]; then \
+	sudo add-apt-repository --yes ppa:ondrej/php; \
+	sudo apt-get update; \
+fi;
+	sudo apt-get install -y php$(php_version) php$(php_version)-common \
+		php$(php_version)-cli php$(php_version)-curl
 endef
 
 endif #__install_php_included
