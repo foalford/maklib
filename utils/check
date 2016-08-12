@@ -1,0 +1,37 @@
+include maklib/libs/gmsl
+include maklib/libs/version
+
+# Check that given variables are set and all have non-empty values,
+# die with an error otherwise.
+#
+# Params:
+#   1. Variable name(s) to test.
+#   2. (optional) Error message to print.
+check_defined = \
+	$(strip $(foreach 1,$1, \
+	$(call __check_defined,$1,$(strip $(value 2)))))
+__check_defined = \
+	$(if $(value $1),, \
+	$(error Undefined $1$(if $2, ($2))))
+
+define __install
+$1:
+	$$(install_$1)
+
+install: $1
+.PHONY: $1
+endef
+
+is_installed = $(shell which $1 > /dev/null && echo $1)
+
+# require packagename,version
+		#$(call install,package,version) 
+#
+define require
+$(call check_defined,install_$1$(if $2, get_$1_version),
+		install_$1 and get_$1_version need to be defined)
+$(and $(call is_installed,$1),$2,\
+	$(call ver.lt,$(get_$1_version),$2),\
+	$(call __install,$1))
+endef
+
