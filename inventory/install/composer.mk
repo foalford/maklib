@@ -1,12 +1,14 @@
 # vim: set filetype=make:
+ifndef __install_composer_included
+__install_composer_included := $(true)
+
 
 define get_composer_version
 $(shell composer -V | sed -ne "s/^.*version \([0-9\.]\+\).*/\1/p")
 endef
 
 # hardcode dependency on php
-composer: php
-
+#
 __composer_installdir := /usr/local/bin
 
 define install_composer 
@@ -15,3 +17,5 @@ define install_composer
 	php composer-setup.php --install-dir=$(__composer_installdir) --filename=composer
 	php -r "unlink('composer-setup.php');"
 endef
+
+endif #__install_composer_included

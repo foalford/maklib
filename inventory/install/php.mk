@@ -12,11 +12,12 @@ endef
 
 define install_php
 if [ ! -f /etc/apt/sources.list.d/ondrej-php-trusty.list ]; then \
-	sudo add-apt-repository --yes ppa:ondrej/php; \
-	sudo apt-get update; \
+	add-apt-repository --yes ppa:ondrej/php; \
+	apt-get update; \
 fi;
-	sudo apt-get install -y php$(php_version) php$(php_version)-common \
-		php$(php_version)-cli php$(php_version)-curl
+	apt-get install -y php$(php_version) php$(php_version)-common \
+		php$(php_version)-cli php$(php_version)-curl \
+		php$(php_version)-dev
 endef
 
 endif #__install_php_included
