@@ -1,4 +1,4 @@
-= Maklib
+# Maklib 
 
 Makefile is an ancient tool however very powerful. A lots of tools 
 borrow its idea around such as gradle, capstrano, ansible. For a 
@@ -7,17 +7,16 @@ which can handle most build and deploy tasks without heavy dependencies.
 
 That's why I create this maklib.
 
-
-== Install
+## Install
 
 curl https://raw.githubusercontent.com/foalford/maklib/master/Makefile > Makefile
 make install && rm Makefile
 
 
-== Usage
+## Usage
 
 In your makefile, create something like
-~~~~~~~~~~~~~~~ Makefile
+```Makefile
 include maklib/utils/check
 include maklib/inventory/install/php.mk
 
@@ -28,5 +27,5 @@ all: install
 $(eval $(call require,php,5.6))
 
 .PHONY: all
-~~~~~~~~~~~
+```
 
