@@ -25,7 +25,7 @@ clean:
 
 build: $(release_name)
 
-$(release_name):
+$(release_name): $(find inventory utils libs -type f) Makefile
 	tar czf $(release_name) $(shell ls -d */)
 
 release: build
