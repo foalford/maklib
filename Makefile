@@ -9,23 +9,23 @@ installdir := /usr/local/include/$(basename $(release_name))
 
 all: install
 
-install:
-	sudo mkdir -p $(installdir)
+install: build
+	mkdir -p $(installdir)
 	if [ -f $(release_name) ] ; then \
-		sudo tar xzf $(release_name) -C $(installdir) ; \
+		tar xzf $(release_name) -C $(installdir) ; \
 	else \
-		curl -0 $(download_url) | sudo tar -xz -C $(installdir); \
+		curl -0 $(download_url) | tar -xz -C $(installdir); \
 	fi;
 
 uninstall:
-	sudo rm -r $(installdir)
+	rm -r $(installdir)
 
 clean:
 	rm $(release_name)
 
 build: $(release_name)
 
-$(release_name): $(find inventory utils libs -type f) Makefile
+$(release_name): $(shell find inventory utils libs -type f) Makefile
 	tar czf $(release_name) $(shell ls -d */)
 
 release: build

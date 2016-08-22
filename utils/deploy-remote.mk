@@ -24,14 +24,14 @@ endif
 # Usage
 #    $(call look_for_hosts_def,staging)
 #
-look_for_hosts_def = $(eval __HOST_PATHS = $(and $1,$1) $(ENVIRONMENT)/hosts hosts/$(ENVIRONMENT))\
-	$(strip $(foreach F,$(__HOST_PATHS),$(shell if [ -f $F ]; then echo $F;fi)))
+look_for_hosts_def = $(firstword $(wildcard $(and $1,$1) $(ENVIRONMENT)/hosts hosts/$(ENVIRONMENT)))
 
 
 # Create dependencies for running a package remotely
 #
 # Params:
 #   1. variable referring to files need to be included for remote run
+#      The first file will be the Makefile
 #   2. target for run
 # Return:
 #   A separator (if any), or empty.
@@ -51,11 +51,18 @@ $$(__target_make_source_file) = $(shell mktemp -u).tgz
 
 __target_deploy_remote := __deploy_remote-$$(__unique_id)
 
+ifdef DEBUG
+$$(info $$$$(REMOTE_USER)@$$(REMOTE_HOST):$$(REMOTE_PORT))
+endif
+
 $$(__target_deploy_remote): SSH_LOGIN_OPTIONS = -p $$(REMOTE_PORT) $$(SSH_OPTIONS) $$(REMOTE_USER)@$$(REMOTE_HOST) 
 $$(__target_deploy_remote): SCP_LOGIN_OPTIONS = -P $$(REMOTE_PORT) $$(SSH_OPTIONS) 
 
 $$($$(__target_make_source_file)): $$(DEPLOYMENT_SOURCES)
-	export DEST=$$(basename $$($$(__target_make_source_file))); mkdir -p $$$$DEST && cp -R $$? $$$$DEST  && tar czf $$@ -C $$$$DEST .  && cd .. && rm -r $$$$DEST
+	export DEST=$$(basename $$($$(__target_make_source_file))); mkdir -p $$$$DEST && \
+		cp -R $$? $$$$DEST  && mv $$< $$$$DEST/Makefile && \
+		tar czf $$@ -C $$$$DEST .  && \
+		cd .. && rm -r $$$$DEST
 
 $$(__target_deploy_remote): $$($$(__target_make_source_file))
 	scp $$(SCP_LOGIN_OPTIONS) $$? $$(REMOTE_USER)@$$(REMOTE_HOST):$$?
@@ -67,5 +74,6 @@ install_remote: $$(__target_deploy_remote)
 .PHONY: $$(__target_deploy_remote) install_remote
 endef
 
+$#
 
 endif #__install_deploy-agent_included 
