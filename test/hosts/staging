@@ -1,0 +1,3 @@
+REMOTE_HOST := php.dev
+REMOTE_USER := root
+REMOTE_PORT := 2200
