@@ -1,11 +1,9 @@
 # vim: set filetype=make:
 
 ifndef __install_php-libev_included
-__install_php-libev_included := $(true)
+__install_php-libev_included := 1
 
-define get_php-libev_version
-1
-endef
+get_php-libev_version := 1
 
 
 define install_php-libev

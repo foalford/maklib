@@ -1,43 +1,85 @@
 # vim: set filetype=make:
 #
-include maklib/libs/gmsl
-include maklib/libs/version
-
-# Check that given variables are set and all have non-empty values,
-# die with an error otherwise.
 #
-# Params:
-#   1. Variable name(s) to test.
-#   2. (optional) Error message to print.
-check_defined = \
-	$(strip $(foreach 1,$1, \
-	$(call __check_defined,$1,$(strip $(value 2)))))
-__check_defined = \
-	$(if $(value $1),, \
-	$(error Undefined $1$(if $2, ($2))))
+
+ifndef __check_requirement_included
+__check_requirement_included := 1
+
+include maklib/libs/gmsl
+include maklib/libs/core/define.mk
+
+
+	
+#
+# Check if the verion (x.y.z) is compatible
+# 1 Real version
+# 2 Expected version
+#
+incompatible = ${eval undefine __status}$(call __incompatible,$(strip $(call __verlt,$1,$2)))
+
+__incompatible = $(if $1,$($1),$(false))
+
+__verlt = \
+	${eval __r := $(call split,.,$2)}\
+	$(foreach d,$(call split,.,$1),\
+		${eval __status = $(or $(__status),\
+		$(call __ver_digit_lt,$d,$(or $(call first,$(__r)),0)))}\
+		${eval __r = $(call rest,$(__r))}\
+	)$(and $(__r),$(true))$(__status)
+
+__ver_digit_lt = $(or \
+	$(if $(call gt,$1,$2),false),\
+	$(if $(call lt,$1,$2),true))
+
 
 define __install
-$1: $1_version := $2
 
-$1:
-	$$(install_$1)
+__target := $1-$(or $2,latest)
 
-install: $1
-.PHONY: $1
+$$(__target) : $1_version = $2
+
+$$(__target) :$3
+	$$(call install_$1)
+
+.PHONY: $$(__target)
+
 endef
 
-is_installed = $(shell which $1 > /dev/null && echo $1)
+$(call def_exclude,__install)
+
+
+is_installed = $(shell which $1 > /dev/null && echo $(true))
+
+# Check functions
+define __require_ready
+$$(if $$(call seq,$$(origin install_$1),undefined),\
+	$$(error 'Need to define install_$1'),\
+		$$(and $2,
+			$$(call seq,$(origin get_$1_version),undefined),
+				$$(error 'Need to define get_$1_version'))\
+)
+endef
+
 
 # require packagename,version
-		#$(call install,package,version) 
 #
-define require
-$(call check_defined,install_$1$(if $2, get_$1_version),
-		install_$1 and get_$1_version need to be defined)
-$(if $(call is_installed,$1),$(and $2,
-	$(call ver.lt,$(get_$1_version),$2),
-	$(call __install,$1,$2)),
-    $(call __install,$1,$2))
+# 1 package
+# 2 version
+#
+define __require
+	${eval $(call __require_ready,$1,$2)} \
+	$(strip $(or \
+		# Not installed
+		$(if $(call is_installed,$1),,\
+			${eval $(call __install,$1,$2,$3)}$1-$(or $2,latest)),
+		# Version is less than required
+		$(and $2,$(call incompatible,$(get_$1_version),$2),
+			${eval $(call __install,$1,$2,$3)}$1-$(or $2,latest))
+	))
 endef
 
+require = $(call __require,$1,$2,$3)
 
+$#
+
+endif # __check_requirement_included := 1

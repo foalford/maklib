@@ -9,7 +9,7 @@ installdir := /usr/local/include/$(basename $(release_name))
 
 all: install
 
-install: build
+install: 
 	mkdir -p $(installdir)
 	if [ -f $(release_name) ] ; then \
 		tar xzf $(release_name) -C $(installdir) ; \
@@ -23,22 +23,36 @@ uninstall:
 clean:
 	rm $(release_name)
 
+# ####################
+# Conditionally include build target in case 
+# It's a deployment only task
+# ####################
+ifeq ($(shell if [ -d inventory ];then echo 1;fi),1)
+
 build: $(release_name)
 
-$(release_name): $(shell find inventory utils libs -type f) Makefile
-	tar czf $(release_name) $(shell ls -d */)
+$(release_name):  Makefile $(shell find inventory utils libs -type f)
+	@echo "making tarball..."
+	@tar czf $(release_name) $(wordlist 2,$(words $^), $^)
 
 release: build
 	aws s3 cp $(release_name) s3://static.bitcoingroup.com.au/$(release_name)
 
+install : build
+
+.PHONY: build
+endif
+# #################### 
+
 -include utils/deploy-remote.mk
--include $(call look_for_hosts_def,test/hosts/staging)
+-include $(call look_for_hosts_def)
 ifdef REMOTE_HOST
 
 SOURCES := Makefile $(release_name) 
-$(eval $(call run_remote_target,$(SOURCES),install))
+install_remote : $(call install_remote,$(SOURCES),install)
+	@echo 'Install remotely'
 
 endif
 
-.PHONY: release build all install clean
+.PHONY: release all install clean
 
