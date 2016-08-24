@@ -3,7 +3,6 @@
 # Run the makefile task in remote machine
 #
 # DEPLOYMENT_SOURCES := All source files
-# DEPLOY_TARGET := the target for deployment
 #
 
 ifndef __install_deploy-agent_included
@@ -36,10 +35,6 @@ look_for_hosts_def = $(firstword $(wildcard $(and $1,$1) $(ENVIRONMENT)/hosts ho
 # Return:
 #   A separator (if any), or empty.
 define __tpl_run_remote_target
-
-DEPLOYMENT_SOURCES = $1
-DEPLOY_TARGET=$2
-
 SSH_OPTIONS ?=
 
 __unique_id := $(call alloc,__tpl_run_remote_target)
@@ -58,15 +53,15 @@ $$(__target_deploy_remote): SCP_LOGIN_OPTIONS = -P $$(REMOTE_PORT) $$(SSH_OPTION
 
 $$($$(__target_make_source_file)): DEST = $$(basename $$($$(__target_make_source_file)))
 
-$$($$(__target_make_source_file)): $$(DEPLOYMENT_SOURCES)
-	@if [ -n $$DEBUG ]; then echo "$$(DEPLOYMENT_SOURCES)";fi
+$$($$(__target_make_source_file)): $1
+	@if [ -n $$DEBUG ]; then echo "$1";fi
 	mkdir -p $$(DEST) && cp $$< $$(DEST)/Makefile 
 	if [ $$(words $$^) -gt 1 ];then cp -R $$(filter-out $$(firstword $$^),$$^) $$(DEST);fi  
 	tar czf $$@ -C $$(DEST) .  &&  cd .. && rm -r $$(DEST)
 
 $$(__target_deploy_remote): $$($$(__target_make_source_file))
 	scp $$(SCP_LOGIN_OPTIONS) $$? $$(REMOTE_USER)@$$(REMOTE_HOST):$$?
-	ssh $$(SSH_LOGIN_OPTIONS) "workdir=\$$$$(mktemp -d); tar xzf $$? -C \$$$$workdir && make -C \$$$$workdir $$(DEPLOY_TARGET) && \
+	ssh $$(SSH_LOGIN_OPTIONS) "workdir=\$$$$(mktemp -d); tar xzf $$? -C \$$$$workdir && make -C \$$$$workdir $2 && \
 		if [ -z $$(DEBUG) ]; then rm -r \$$$$workdir; fi"
 
 install_remote-$(__unique_id) := $$(__target_deploy_remote)
