@@ -39,7 +39,7 @@ endef
 
 define capistrano
 
-release_file = $1
+release_file = $(notdir $1)
 installdir = $2
 symlink_objs = $3
 restart_func = $4
@@ -78,7 +78,13 @@ $$(deploy_path): $$(dir_r)
 	mkdir $$@
 
 __init$$(__u): $$(abs_symlinks) 
-	composer install -d $$(deploy_path) --no-dev -o
+	if [ -f $$(deploy_path)/composer.lock ]; then \
+		composer install -d $$(deploy_path) --no-dev -o;\
+	elif [ -f $$(deploy_path)/Gemfile.lock ]; then  \
+		cd $$(deploy_path) && bundle  install --with=production --path=vendor/bundle; \
+	else  \
+		echo 'Cannot find a project definition file. Abort' && false; \
+	fi
 	ln -snf $$(deploy_path) $$(dir_r)/current
 
 __restart$$(__u): __init$$(__u)
