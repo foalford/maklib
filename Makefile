@@ -46,7 +46,12 @@ endif
 
 -include utils/deploy-remote.mk
 -include $(call look_for_hosts_def)
+
 ifdef REMOTE_HOST
+
+-include inventory/install/make.mk
+install_remote: $(call require,make,4.2)
+
 
 SOURCES := Makefile $(release_name) 
 install_remote : $(call install_remote,$(SOURCES),install)

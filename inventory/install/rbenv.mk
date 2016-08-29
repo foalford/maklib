@@ -9,19 +9,19 @@ rbenv_init_file := $(firstword \
 	$(foreach d,$(.INCLUDE_DIRS),$(wildcard $d/maklib/inventory/install/rbenv/rbenv-init.sh)))
 
 define install_rbenv
-	if [ ! -d ~/.rbenv ]; then \
-		git clone --depth=1 https://github.com/rbenv/rbenv.git ~/.rbenv; \
-		echo 'export PATH="$$HOME/.rbenv/bin:$$PATH"' >> ~/.bashrc; \
-		echo 'export PATH="$$HOME/.rbenv/bin:$$PATH"' >> ~/.zshenv; \
+	if [ ! -d ~$(USERNAME)/.rbenv ]; then \
+		$(SUDO) git clone --depth=1 https://github.com/rbenv/rbenv.git ~$(USERNAME)/.rbenv; \
+		$(SUDO) echo 'export PATH="$$HOME/.rbenv/bin:$$PATH"' >> ~$(USERNAME)/.bashrc; \
+		$(SUDO) echo 'export PATH="$$HOME/.rbenv/bin:$$PATH"' >> ~$(USERNAME)/.zshenv; \
 	fi
-	if [ ! -d ~/.rbenv/plugins/ruby-build ]; then \
-		git clone --depth=1 https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build; \
+	if [ ! -d ~$(USERNAME)/.rbenv/plugins/ruby-build ]; then \
+		$(SUDO) git clone --depth=1 https://github.com/rbenv/ruby-build.git ~$(USERNAME)/.rbenv/plugins/ruby-build; \
 	fi
-	cp $(rbenv_init_file)  ~/.deployrc
+	$(SUDO) cp $(rbenv_init_file)  ~$(USERNAME)/.deployrc
 	if [ "$$SHELL" = '/bin/bash' ]; then \
-		echo 'source ~/.deployrc' >> ~/.bashrc; \
+		$(SUDO) echo 'source ~/.deployrc' >> ~$(USERNAME)/.bashrc; \
 	else  									\
-		echo 'source ~/.deployrc' >> ~/.zshrc; \
+		$(SUDO) echo 'source ~/.deployrc' >> ~$(USERNAME)/.zshrc; \
 	fi
 endef
 
