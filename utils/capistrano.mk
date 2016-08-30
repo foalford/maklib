@@ -15,27 +15,17 @@ include maklib/libs/gmsl
 # 
 # $(call capistrano name,installdir,symlink_objs,callback)
 #
-# The sub makefile template works on remote server
-# Structure stick to capistrano's 
-#
-# 1. Place the code into position
-# 2. Link up all necessary local configuration files
-# 3. Remove the obsoleted dirs
 
-define __tpl_create_symlink
-$$(deploy_path)/$$F: $$(dir_s)/$$F 
-	ln -s  $$$$< $$$$@
-
-$$(dir_s)/$$F:
-	if [ "$$(basename $$F)"=="$$F" ]; then\
-		mkdir -p $$$$@; \
-	else \
-		mkdir -p $$$$(dir $$$$@); touch $$$$@; \
-	fi
-
-endef
-
-
+# Generating a makefile that will be run remotely
+# This makefile will deploy the package file in 
+# capistrano way
+# 
+# For example
+# __remote_makefile := $(shell mktemp -ud)
+# 
+# # Create a remote makefile for installation
+# $(__remote_makefile):
+# 	$(file >$@,$(call capistrano,$(PACKAGE_FILE),$(installdir),$(shared_objs)))
 
 define capistrano
 
@@ -43,69 +33,77 @@ release_file = $(notdir $1)
 installdir = $2
 symlink_objs = $3
 restart_func = $4
+preservation_count := 10
 
 ifeq ($(strip $(restart_func)),)
 	restart_func := echo 'done'
 endif 
 
-dir_r := $$(installdir)/releases
 dir_s := $$(installdir)/shared
-NUM_PRESERVE_RLS := 10
 
-$$(shell if [ ! -d $$(dir_s) ];then mkdir -p $$(dir_s); fi)
-$$(shell if [ ! -d $$(dir_r) ];then mkdir -p $$(dir_r); fi)
-new_dirname := $$(shell expr $$$$(ls -1 $$(dir_r) | sed -n '/[0-9]\+/p' | sort  -n |tail -1) + 1)
-latest_obsoleted_dirname := $$(if $$(call int_gt,$$(new_dirname),$$(NUM_PRESERVE_RLS)),\
-		$$(shell ls -1 $$(dir_r) | sed -n '/[0-9]\+/p' | sort  -n |tail -$$(NUM_PRESERVE_RLS) |head -1))
+ifndef NEW_DEPLOYMENT_DIR
 
-deploy_path = $$(dir_r)/$$(new_dirname)
+dir_r := $$(installdir)/releases
+deploy: $$(dir_s) $$(dir_r)
+	@echo 'Initialize the dirs'
+	export newid=$$$$(expr $$$$(ls -1 $$(dir_r) | sed -n '/[0-9]\+/p' | sort  -n |tail -1) + 1) ; \
+		echo "New release $$$$newid"; $(MAKE) -e NEW_DEPLOYMENT_DIR=$$$$newid deploy cleanup
+else
 
-# Create symlink rules
-$$(foreach F, $$(symlink_objs), $$(eval $$(__tpl_create_symlink)))
+dir_r := $$(installdir)/releases/$$(NEW_DEPLOYMENT_DIR)
 
-__u = $(call alloc,capistrano)
-deploy_phases := __codefile$$(__u) __init$$(__u) __restart$$(__u)
+deploy : update-code initialize housekeeping 
 
-abs_symlinks = $$(addprefix $$(deploy_path)/,$$(symlink_objs)) 
-$$(abs_symlinks): __codefile$$(__u)
-
-deploy: $$(deploy_phases) | __cleanup$$(__u)
-
-__codefile$$(__u): $$(deploy_path) $$(release_file)
+update-code: $$(dir_r) $$(release_file)
 	tar xzf $$(release_file) -C $$<
 
-$$(deploy_path): $$(dir_r)
-	mkdir $$@
-
-__init$$(__u): $$(abs_symlinks) 
-	if [ -f $$(deploy_path)/composer.lock ]; then \
-		composer install -d $$(deploy_path) --no-dev -o;\
-	elif [ -f $$(deploy_path)/Gemfile.lock ]; then  \
-		cd $$(deploy_path) && bundle  install --with=production --path=vendor/bundle; \
+initialize : update-code $$(addprefix $$(dir_r)/,$$(symlink_objs)) 
+	if [ -f $$(dir_r)/composer.lock ]; then \
+		composer install -d $$(dir_r) --no-dev -o;\
+	elif [ -f $$(dir_r)/Gemfile.lock ]; then  \
+		cd $$(dir_r) && bundle install --with=production --with=development test --path=vendor/bundle; \
 	else  \
 		echo 'Cannot find a project definition file. Abort' && false; \
 	fi
-	ln -snf $$(deploy_path) $$(dir_r)/current
+	cd $$(dir_r)/.. && ln -snf $$(dir_r) current
 
-__restart$$(__u): __init$$(__u)
+housekeeping : initialize
 	$$(call restart_func)
 
-$$(dir_r):
-	mkdir -p $$@
-
-__cleanup$$(__u):
-	if [ -n "$$(latest_obsoleted_dirname)" ]; then \
-		cd $$(dir_r) && for i in $$$$(seq $$(latest_obsoleted_dirname) -1 1); do if [ -d $$$$i ]; then rm -rf $$$$i; else break; fi; done \
+cleanup:
+	if [ $$(NEW_DEPLOYMENT_DIR) -gt $$(preservation_count) ]; then \
+		for i in $$$$(seq $$$$(ls -1 $$(realpath $$(dir_r)/..) | \
+				sed -n '/[0-9]\+/p' | sort  -n | \
+				tail -$$(preservation_count) |head -1) -1 1); do \
+			if [ -d $$$$i ];then rm -rf $$$$i; else break; fi \
+		done \
 	fi
 
-.PHONY: $$(deploy_phases) __cleanup$$(__u)
+$$(dir_r)/%: $$(dir_s)/%
+	ln -s $$< $$@
+
+$$(dir_s)/%:
+	@mkdir -p $$(dir $$@)
+	@if [ ! "$$(dir $$@)" = "$$@" ] ; then \
+		touch $$@ ; \
+	fi  
+
+
+.PHONY: initialize housekeeping cleanup
+
+
+endif
+
+
+initdirs = $$(dir_r) $$(dir_s)
+
+$$(initdirs):
+	mkdir -p $$@
 
 endef
 
-
-$(call def_exclude,__tpl_%)
+# End capistrano
 $(call def_exclude,capistrano)
+
 $#
-
-
 endif 
