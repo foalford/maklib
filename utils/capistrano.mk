@@ -61,7 +61,7 @@ initialize : update-code $$(addprefix $$(dir_r)/,$$(symlink_objs))
 	if [ -f $$(dir_r)/composer.lock ]; then \
 		composer install -d $$(dir_r) --no-dev -o;\
 	elif [ -f $$(dir_r)/Gemfile.lock ]; then  \
-		cd $$(dir_r) && bundle install --with=production --with=development test --path=vendor/bundle; \
+		cd $$(dir_r) && bundle install --with=production --without=development test --path=vendor/bundle; \
 	else  \
 		echo 'Cannot find a project definition file. Abort' && false; \
 	fi
@@ -72,7 +72,8 @@ housekeeping : initialize
 
 cleanup:
 	if [ $$(NEW_DEPLOYMENT_DIR) -gt $$(preservation_count) ]; then \
-		for i in $$$$(seq $$$$(ls -1 $$(realpath $$(dir_r)/..) | \
+		cd $$(dir_r)/.. && \
+		for i in $$$$(seq $$$$(ls -1 ) | \
 				sed -n '/[0-9]\+/p' | sort  -n | \
 				tail -$$(preservation_count) |head -1) -1 1); do \
 			if [ -d $$$$i ];then rm -rf $$$$i; else break; fi \

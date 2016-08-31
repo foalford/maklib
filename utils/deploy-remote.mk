@@ -64,7 +64,7 @@ $$($$(__target_make_source_file)): $1
 
 $$(__target_deploy_remote): $$($$(__target_make_source_file))
 	scp $$(SCP_LOGIN_OPTIONS) $$? $$(REMOTE_USER)@$$(REMOTE_HOST):$$?
-	ssh $$(SSH_LOGIN_OPTIONS) "$$(REMOTE_PREMAKE);workdir=\$$$$(mktemp -d); tar xzf $$? -C \$$$$workdir && $$(REMOTE_MAKE) -C \$$$$workdir $2 && \
+	ssh $$(SSH_LOGIN_OPTIONS) "$$(REMOTE_PREMAKE) workdir=\$$$$(mktemp -d); tar xzf $$? -C \$$$$workdir && $$(REMOTE_MAKE) -C \$$$$workdir $2 && \
 		if [ -z "$$(DEBUG)" ]; then rm -r \$$$$workdir; fi"
 
 install_remote-$(__unique_id) := $$(__target_deploy_remote)
