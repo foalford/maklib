@@ -4,7 +4,6 @@
 # hosts
 
 release_name := maklib.tgz
-download_url := http://static.bitcoingroup.com.au/$(release_name)
 installdir := /usr/local/include/$(basename $(release_name))
 
 all: install
@@ -13,8 +12,6 @@ install:
 	mkdir -p $(installdir)
 	if [ -f $(release_name) ] ; then \
 		tar xzf $(release_name) -C $(installdir) ; \
-	else \
-		curl -0 $(download_url) | tar -xz -C $(installdir); \
 	fi;
 
 uninstall:
