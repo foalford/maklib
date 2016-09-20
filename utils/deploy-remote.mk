@@ -51,7 +51,7 @@ $$(info $$(REMOTE_USER)@$$(REMOTE_HOST):$$(REMOTE_PORT))
 endif
 
 $$(__target_deploy_remote): SSH_LOGIN_OPTIONS = -p $$(REMOTE_PORT) $$(SSH_OPTIONS) $$(REMOTE_USER)@$$(REMOTE_HOST) 
-$$(__target_deploy_remote): SCP_LOGIN_OPTIONS = -P $$(REMOTE_PORT) $$(SSH_OPTIONS) 
+$$(__target_deploy_remote): SCP_LOGIN_OPTIONS = -P $$(REMOTE_PORT) $$(SCP_OPTIONS) 
 $$(__target_deploy_remote): REMOTE_MAKE ?= $(MAKE)
 
 $$($$(__target_make_source_file)): DEST = $$(basename $$($$(__target_make_source_file)))
@@ -65,7 +65,7 @@ $$($$(__target_make_source_file)): $1
 $$(__target_deploy_remote): $$($$(__target_make_source_file))
 	scp $$(SCP_LOGIN_OPTIONS) $$? $$(REMOTE_USER)@$$(REMOTE_HOST):$$?
 	ssh $$(SSH_LOGIN_OPTIONS) "$$(REMOTE_PREMAKE) workdir=\$$$$(mktemp -d); tar xzf $$? -C \$$$$workdir && $$(REMOTE_MAKE) -C \$$$$workdir $2 && \
-		if [ -z "$$(DEBUG)" ]; then rm -r \$$$$workdir; fi"
+		if [ -z '$$(DEBUG)' ]; then rm -r \$$$$workdir; fi"
 
 install_remote-$(__unique_id) := $$(__target_deploy_remote)
 

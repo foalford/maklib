@@ -62,13 +62,15 @@ initialize : update-code $$(addprefix $$(dir_r)/,$$(symlink_objs))
 		composer install -d $$(dir_r) --no-dev -o;\
 	elif [ -f $$(dir_r)/Gemfile.lock ]; then  \
 		cd $$(dir_r) && bundle install --with=production --without=development test --path=vendor/bundle; \
+	elif [ -f $$(dir_r)/package.json ]; then \
+		npm install ;\
 	else  \
 		echo 'Cannot find a project definition file. Abort' && false; \
 	fi
 
 activate : initialize 
 	cd $$(dir_r) && $$(call restart_func,$$(dir_r))
-	cd $$(dir_r) && touch tmp/restart.txt && ln -snf $$(dir_r) ../current 
+	cd $$(dir_r) && ln -snf $$(dir_r) ../current 
 
 cleanup: deploy
 	if [ $$(NEW_DEPLOYMENT_DIR) -gt $$(preservation_count) ]; then \
@@ -84,12 +86,10 @@ $$(dir_r)/%: $$(dir_s)/%
 	ln -s $$< $$@
 
 $$(dir_s)/%:
-	@mkdir -p $$(dir $$@)
-	@if [ ! "$$(dir $$@)" = "$$@" ] ; then \
-		touch $$@ ; \
-	fi  
+	mkdir -p $$(@D)
+	v=$$@; if [ $$@ = "$$$${v%%.*}" ]; then mkdir $$@; else touch $$@; fi
 
-.PRECIOUS: $$(symlink_objs)
+.SECONDARY: $$(subst $$(dir_r),$$(dir_s),$$(symlink_objs))
 .PHONY: initialize activate cleanup
 
 
