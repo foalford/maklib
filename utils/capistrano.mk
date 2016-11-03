@@ -63,7 +63,7 @@ initialize : update-code $$(addprefix $$(dir_r)/,$$(symlink_objs))
 	elif [ -f $$(dir_r)/Gemfile.lock ]; then  \
 		cd $$(dir_r) && bundle install --with=production --without=development test --path=vendor/bundle; \
 	elif [ -f $$(dir_r)/package.json ]; then \
-		npm install ;\
+		cd $$(dir_r) && npm install ;\
 	else  \
 		echo 'Cannot find a project definition file. Abort' && false; \
 	fi
@@ -87,7 +87,7 @@ $$(dir_r)/%: $$(dir_s)/%
 
 $$(dir_s)/%:
 	mkdir -p $$(@D)
-	v=$$@; if [ $$@ = "$$$${v%%.*}" ]; then mkdir $$@; else touch $$@; fi
+	v=$$@; if [ $$@ = "$$$${v%%.*}" ]; then mkdir -p $$@; else touch $$@; fi
 
 .SECONDARY: $$(subst $$(dir_r),$$(dir_s),$$(symlink_objs))
 .PHONY: initialize activate cleanup
