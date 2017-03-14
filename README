@@ -9,8 +9,14 @@ That's why I create this maklib.
 
 ## Install
 
+cp /path/to/maklib.tgz .
 curl https://raw.githubusercontent.com/foalford/maklib/master/Makefile > Makefile
 make install && rm Makefile
+
+or 
+
+git clone --depth=1 https://github.com/foalford/maklib maklib
+make build && make install
 
 
 ## Usage
@@ -21,10 +27,9 @@ include maklib/utils/check
 include maklib/inventory/install/php.mk
 
 
-all: install
+all: $(call require,php,5.6)
     echo "Install all dependencies"
 
-$(eval $(call require,php,5.6))
 
 .PHONY: all
 ```
