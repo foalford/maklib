@@ -14,6 +14,11 @@ install:
 		tar xzf $(release_name) -C $(installdir) ; \
 	fi;
 
+-include maklib/utils/check
+-include maklib/inventory/install/make.mk
+deps: $(call require,make,4.2)
+	echo 'install make 4.2'
+
 uninstall:
 	rm -r $(installdir)
 
@@ -32,8 +37,6 @@ $(release_name):  Makefile $(shell find inventory utils libs -type f)
 	@echo "making tarball..."
 	@tar czf $(release_name) $(wordlist 2,$(words $^), $^)
 
-release: build
-	aws s3 cp $(release_name) s3://static.bitcoingroup.com.au/$(release_name)
 
 install : build
 
@@ -41,14 +44,11 @@ install : build
 endif
 # #################### 
 
--include utils/deploy-remote.mk
--include $(call look_for_hosts_def)
 
 ifdef REMOTE_HOST
 
--include inventory/install/make.mk
-install_remote: $(call require,make,4.2)
-
+-include maklib/utils/deploy-remote.mk
+-include $(call look_for_hosts_def)
 
 SOURCES := Makefile $(release_name) 
 install_remote : $(call install_remote,$(SOURCES),install)
@@ -56,5 +56,5 @@ install_remote : $(call install_remote,$(SOURCES),install)
 
 endif
 
-.PHONY: release all install clean
+.PHONY: deps all install clean
 
