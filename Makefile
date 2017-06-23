@@ -17,7 +17,7 @@ install:
 -include maklib/utils/check
 -include maklib/inventory/install/make.mk
 deps: $(call require,make,4.2)
-	echo 'install make 4.2'
+	echo 'requires make 4.2'
 
 uninstall:
 	rm -r $(installdir)
@@ -38,9 +38,9 @@ $(release_name):  Makefile $(shell find inventory utils libs -type f)
 	@tar czf $(release_name) $(wordlist 2,$(words $^), $^)
 
 
-install : build
+install : build deps
 
-.PHONY: build
+.PHONY: build make4.2
 endif
 # #################### 
 
