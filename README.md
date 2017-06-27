@@ -15,8 +15,7 @@ make install && rm Makefile
 
 or 
 
-git clone --depth=1 https://github.com/foalford/maklib maklib
-make build && make install
+git clone --depth=1 https://github.com/foalford/maklib maklib; make build && make install
 
 
 ## Usage
