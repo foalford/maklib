@@ -65,7 +65,7 @@ initialize : update-code $$(addprefix $$(dir_r)/,$$(symlink_objs))
 	elif [ -f $$(dir_r)/package.json ]; then \
 		cd $$(dir_r) && npm install ;\
 	else  \
-		echo 'Cannot find a project definition file. Abort' && false; \
+		echo 'Cannot find a project definition file.' \
 	fi
 
 activate : initialize 
