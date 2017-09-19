@@ -70,7 +70,7 @@ initialize : update-code $$(addprefix $$(dir_r)/,$$(symlink_objs))
 
 activate : initialize 
 	cd $$(dir_r) && $$(call restart_func,$$(dir_r))
-	cd $$(dir_r) && ln -snf $$(dir_r) ../current 
+	cd $$(dir_r) && ln -snf $$(dir_r) ../../current 
 
 cleanup: deploy
 	if [ $$(NEW_DEPLOYMENT_DIR) -gt $$(preservation_count) ]; then \
